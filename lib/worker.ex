@@ -9,7 +9,6 @@ defmodule Randex.Worker do
 		case Exutils.makestamp do
 			some when (some < (stamp + full_buzz)) -> stamp
 			new_stamp ->
-				IO.puts "seed! #{inspect self}"
 				<<a::32, b::32, c::32>> = :crypto.rand_bytes 12
 				case :random.seed(a, b, c) do
 					:undefined -> :ok

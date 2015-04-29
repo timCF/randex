@@ -18,7 +18,7 @@ defmodule Randex do
     Supervisor.start_link(children, opts)
   end
 
-  def add_new_worker do
+  defp add_new_worker do
     :ok = :supervisor.start_child( Randex.Supervisor, Supervisor.Spec.worker(Randex.Worker, [], [id: Exutils.makecharid,restart: :transient])) |> elem(0)
   end
 
@@ -27,14 +27,14 @@ defmodule Randex do
   #
 
   def shuffle(enum) do
-    case :pg2.get_members(@group) do
+    case :pg2.get_members(@group) |> Enum.shuffle do
       [pid|_] -> Randex.Worker.shuffle(pid,enum)
       [] -> add_new_worker
             shuffle(enum)
     end
   end
   def uniform(int) do
-    case :pg2.get_members(@group) do
+    case :pg2.get_members(@group) |> Enum.shuffle  do
       [pid|_] -> Randex.Worker.uniform(pid,int)
       [] -> add_new_worker
             uniform(int)
