@@ -33,6 +33,9 @@ defmodule Randex.Worker do
 		res
 	end
 	defcall uniform(int), state: stamp do
+		#
+		#	TODO : make definfo and receive instead defcall
+		#
 		:ok = :pg2.leave(@group, self)
 		res = {:reply, :random.uniform(int), maybe_randomize(stamp)}
 		:ok = :pg2.join(@group, self)
