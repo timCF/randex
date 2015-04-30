@@ -24,22 +24,35 @@ defmodule Randex.Worker do
 
 	definit do
 		:ok = :pg2.join(@group, self)
+		:ok = :pg2.join("randex_workers_full", self)
 		{:ok, maybe_randomize(0)}
 	end
-	defcall shuffle(enum), state: stamp do
+	definfo {command, sender, subj}, state: stamp do
 		:ok = :pg2.leave(@group, self)
-		res = {:reply, Enum.shuffle(enum), maybe_randomize(stamp)}
+		case command do
+			:shuffle -> send(sender, {:shuffle, Enum.shuffle(subj)})
+			:uniform -> send(sender, {:uniform, :random.uniform(subj)})
+		end 
+		receive_and_handle_queue
 		:ok = :pg2.join(@group, self)
-		res
+		{:noreply, maybe_randomize(stamp)}
 	end
-	defcall uniform(int), state: stamp do
-		#
-		#	TODO : make definfo and receive instead defcall
-		#
-		:ok = :pg2.leave(@group, self)
-		res = {:reply, :random.uniform(int), maybe_randomize(stamp)}
-		:ok = :pg2.join(@group, self)
-		res
+	
+	#
+	#	priv
+	#
+
+	defp receive_and_handle_queue do
+		receive do
+			{:shuffle, sender, subj} -> 
+				send(sender, {:shuffle, Enum.shuffle(subj)})
+				receive_and_handle_queue
+			{:uniform, sender, subj} -> 
+				send(sender, {:uniform, :random.uniform(subj)})
+				receive_and_handle_queue
+		after
+			1 -> :ok
+		end
 	end
 
 end
