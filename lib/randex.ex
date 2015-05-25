@@ -48,6 +48,28 @@ defmodule Randex do
   	end
   end
 
+  defp mt_randomize do
+    <<a::32, b::32, c::32>> = :crypto.rand_bytes 12
+    :sfmt.seed(a,b,c)
+  end
+
+  def mt_shuffle_prep([]), do: []
+  def mt_shuffle_prep(lst) do
+    mt_randomize
+    mt_shuffle_proc(lst, [])
+  end
+
+  defp mt_shuffle_proc([], res), do: res
+  defp mt_shuffle_proc(lst, res_lst) do
+    index = :sfmt.uniform(length lst) - 1
+    %{lst: new_lst, res: new_res} = Enum.reduce(lst, %{lst: [], res: nil, counter: 0},
+      fn 
+      el, resmap = %{counter: counter} when (counter == index) -> Map.update!(resmap, :res, fn(nil) -> el end) |> Map.update!(:counter, &(&1+1))
+      el, resmap = %{} -> Map.update!(resmap, :lst, &([el|&1])) |> Map.update!(:counter, &(&1+1))
+      end)
+    mt_shuffle_proc(new_lst, [new_res|res_lst])
+  end
+
   #
   # public
   #
@@ -62,6 +84,17 @@ defmodule Randex do
 	:random.uniform(int)
   end
 
+  # here use sfmt
+  def mt_uniform(int) when is_integer(int) do
+    mt_randomize
+    :sfmt.uniform(int)
+  end
+  def mt_uniform do
+    mt_randomize
+    :sfmt.uniform
+  end
+
+  def mt_shuffle(some), do: Enum.to_list(some) |> mt_shuffle_prep
 
   #	here call gen_servers
   def shuffle_call(enum) when (is_list(enum) or is_map(enum)) do
