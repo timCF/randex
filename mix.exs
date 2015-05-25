@@ -16,7 +16,8 @@ defmodule Randex.Mixfile do
                       :logger,
                       :exactor,
                       :exutils,
-                      :sfmt
+                      :sfmt,
+                      :silverb
                     ],
      mod: {Randex, []}]
   end
@@ -34,7 +35,8 @@ defmodule Randex.Mixfile do
     [
       {:exactor, github: "sasa1977/exactor", tag: "0467f8100bc735405d597dbf94996195eb31e0b6", override: true},
       {:exutils, github: "timCF/exutils"},
-      {:sfmt, github: "jj1bdx/sfmt-erlang"}
+      {:sfmt, github: "jj1bdx/sfmt-erlang"},
+      {:silverb, github: "timCF/silverb"}
     ]
   end
 end

@@ -2,6 +2,7 @@ defmodule Randex do
   use Application
   require Logger
   require Exutils
+  use Silverb
   @group "randex_workers"
   @group_full "randex_workers_full"
 
@@ -53,12 +54,6 @@ defmodule Randex do
     :sfmt.seed(a,b,c)
   end
 
-  def mt_shuffle_prep([]), do: []
-  def mt_shuffle_prep(lst) do
-    mt_randomize
-    mt_shuffle_proc(lst, [])
-  end
-
   defp mt_shuffle_proc([], res), do: res
   defp mt_shuffle_proc(lst, res_lst) do
     index = :sfmt.uniform(length lst) - 1
@@ -85,16 +80,22 @@ defmodule Randex do
   end
 
   # here use sfmt
-  def mt_uniform(int) when is_integer(int) do
+  def mt_hard_uniform(int) when is_integer(int) do
     mt_randomize
     :sfmt.uniform(int)
   end
-  def mt_uniform do
+  def mt_hard_uniform do
     mt_randomize
     :sfmt.uniform
   end
+  def mt_hard_shuffle(some) do 
+    mt_randomize
+    Enum.to_list(some) |> mt_shuffle_proc([])
+  end
 
-  def mt_shuffle(some), do: Enum.to_list(some) |> mt_shuffle_prep
+  def mt_uniform(int) when is_integer(int), do: :sfmt.uniform(int)
+  def mt_uniform, do: :sfmt.uniform
+  def mt_shuffle(some), do: Enum.to_list(some) |> mt_shuffle_proc([])
 
   #	here call gen_servers
   def shuffle_call(enum) when (is_list(enum) or is_map(enum)) do
