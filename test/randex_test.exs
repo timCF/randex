@@ -36,4 +36,16 @@ defmodule RandexTest do
     assert res
   end
 
+  test "x" do
+    res = Enum.all?(1..100, 
+            fn(_) ->
+              r1 = Randex.x_shuffle(1..100)
+              r2 = Randex.x_shuffle(1..100)
+              true = (r1 != r2)
+              true = (Enum.to_list(1..100) == Enum.sort(r1))
+              true = (Enum.to_list(1..100) == Enum.sort(r2))
+            end)
+    assert res
+  end
+
 end

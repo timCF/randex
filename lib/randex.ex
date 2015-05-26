@@ -119,4 +119,38 @@ defmodule Randex do
     end
   end
 
+  #miXed generator
+  def x_uniform do
+    case :sfmt.uniform do
+      mt when (mt > 0.98) ->  mt_randomize
+                              :sfmt.uniform
+      mt when (mt >= 0.5) ->  :sfmt.uniform
+      na when (na < 0.02) ->  randomize
+                              :random.uniform
+      na when (na < 0.5)  ->  :random.uniform
+    end
+  end
+
+  def x_uniform(int) when is_integer(int) do
+    case :sfmt.uniform do
+      mt when (mt > 0.98) ->  mt_randomize
+                              :sfmt.uniform(int)
+      mt when (mt >= 0.5) ->  :sfmt.uniform(int)
+      na when (na < 0.02) ->  randomize
+                              :random.uniform(int)
+      na when (na < 0.5)  ->  :random.uniform(int)
+    end
+  end
+
+  def x_shuffle(lst) do
+    case :sfmt.uniform do
+      mt when (mt > 0.98) ->  mt_randomize
+                              mt_shuffle(lst)
+      mt when (mt >= 0.5) ->  mt_shuffle(lst)
+      na when (na < 0.02) ->  randomize
+                              Enum.shuffle(lst)
+      na when (na < 0.5)  ->  Enum.shuffle(lst)
+    end
+  end
+
 end
