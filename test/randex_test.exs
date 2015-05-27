@@ -1,7 +1,7 @@
 defmodule RandexTest do
   use ExUnit.Case
 
-  @num 1000
+  @num 10
 
   @tag timeout: 300000
   test "mt shuffle" do
@@ -38,7 +38,7 @@ defmodule RandexTest do
               true = (res > 0) and (res <= n)
             end)
           end
-    IO.puts "mt &uniform/0 #{time}"
+    IO.puts "mt &uniform/1 #{time}"
     assert res
   end
 

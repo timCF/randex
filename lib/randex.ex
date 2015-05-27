@@ -66,14 +66,20 @@ defmodule Randex do
             get_worker
     end
   end
-  defp receive_ans(subj) do
+
+  defp receive_ans(subj, attempt \\ 1)
+  defp receive_ans(subj, attempt) when (attempt < 11) do
     len = length(:pg2.get_members(@group))
     await = (len*len)
     receive do
       {^subj, res} -> res
     after
       await ->  add_new_worker
-                receive_ans(subj)
+                if (rem(attempt,3) == 0) do 
+                  Logger.error("#{__MODULE__} not received ans, retry query #{inspect subj}")
+                  get_worker |> send(subj) 
+                end
+                receive_ans(subj, attempt+1)
     end
   end
 
