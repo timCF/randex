@@ -4,14 +4,12 @@ defmodule Randex do
   require Exutils
   use Silverb
   @group "randex_workers"
-  @group_full "randex_workers_full"
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
     :ok = :pg2.create(@group)
-    :ok = :pg2.create(@group_full)
     children = [
       # Define workers and child supervisors to be supervised
       # worker(Randex.Worker, [arg1, arg2, arg3])
@@ -35,18 +33,23 @@ defmodule Randex do
 	end
   end
 
-  defp add_new_worker do
-    :ok = :supervisor.start_child( Randex.Supervisor, Supervisor.Spec.worker(Randex.Worker, [], [id: Exutils.makecharid, restart: :transient])) |> elem(0)
+  defp add_new_worker, do: :ok = :supervisor.start_child( Randex.Supervisor, Supervisor.Spec.worker(Randex.Worker, [], [id: Exutils.makecharid, restart: :transient])) |> elem(0)
+  defp get_worker do
+    case :pg2.get_members(@group) |> Enum.shuffle do
+      [pid|_] ->  pid
+      [] -> add_new_worker
+            get_worker
+    end
   end
-  defp receive_ans(type) do
-	len = length(:pg2.get_members(@group_full))
-  	await = (len*len)
+  defp receive_ans(subj) do
+    len = length(:pg2.get_members(@group))
+    await = (len*len)
     receive do
-  		{^type, res} -> res
-  	after
-		await -> add_new_worker
-				 receive_ans(type)
-  	end
+      {^subj, res} -> res
+    after
+      await ->  add_new_worker
+                receive_ans(subj)
+    end
   end
 
   defp mt_randomize do
@@ -99,24 +102,19 @@ defmodule Randex do
 
   #	here call gen_servers
   def shuffle_call(enum) when (is_list(enum) or is_map(enum)) do
-    case :pg2.get_members(@group) |> Enum.shuffle do
-      [pid|_] -> 
-      	send(pid, {:shuffle, self, enum})
-        receive_ans(:shuffle)
-      [] -> 
-      	add_new_worker
-        shuffle(enum)
-    end
+    subj = {:shuffle, self, enum}
+    get_worker |> send(subj)
+    receive_ans(subj)
   end
   def uniform_call(int) when (is_integer(int) and (int > 0)) do
-    case :pg2.get_members(@group) |> Enum.shuffle  do
-      [pid|_] -> 
-      	send(pid, {:uniform, self, int})
-      	receive_ans(:uniform)
-      [] -> 
-      	add_new_worker
-        uniform(int)
-    end
+    subj = {:uniform_int, self, int}
+    get_worker |> send(subj)
+    receive_ans(subj)
+  end
+  def uniform_call do
+    subj = {:uniform_float, self, nil}
+    get_worker |> send(subj)
+    receive_ans(subj)
   end
 
   #miXed generator
